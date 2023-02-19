@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { Configuration, OpenAIApi } from 'openai';
+import { CommentConfigHandler } from './comment-config';
 
 // load the .env file
 require("dotenv").config({path: __dirname + "/../.env"});
@@ -19,6 +20,12 @@ export function activate(context: vscode.ExtensionContext) {
 		// get the current text editor
 		const editor = vscode.window.activeTextEditor;
 
+		const commentConfigHandler = new CommentConfigHandler();
+
+		const commentCfg = commentConfigHandler.getCommentConfig(editor?.document?.languageId || "js");
+
+		const commentLineDelimiter = commentCfg?.lineComment;
+
 		if (editor) {
 			let document = editor.document;
 			let selection = editor.selection;
@@ -35,17 +42,14 @@ export function activate(context: vscode.ExtensionContext) {
 					temperature: 0,
 					max_tokens: 1000,
 				  });
-				
-				console.log(data);
+
+				CommentConfigHandler
 
 				editor.edit(editBuilder => {
 					
 					const position = new vscode.Position(selection.start.line, 0);
-					console.log(JSON.stringify(position));
-					console.log(data.choices[0].text?.trimStart());
-					console.log(`# ${data.choices[0].text?.trimStart()}\n${codeblock}`);
 					// if the line is negative, it will insert at the start of the document
-					editBuilder.replace(position, `# ${data.choices[0].text?.trimStart()}\n` || "No response from OpenAI");					
+					editBuilder.replace(position, `${commentLineDelimiter}${data.choices[0].text?.trimStart().replaceAll("\n", `\n${commentLineDelimiter}`)}\n`  || "");					
 				});
 			};
 
