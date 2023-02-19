@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { Configuration, OpenAIApi } from 'openai';
 
 // load the .env file
-require("dotenv").config({path: __dirname + "/../.env"});
+require("dotenv").config({ path: __dirname + "/../.env" });
 
 
 // This method is called when your extension is activated
@@ -22,39 +22,30 @@ export function activate(context: vscode.ExtensionContext) {
 		if (editor) {
 			let document = editor.document;
 			let selection = editor.selection;
-			
+
 			// get the codeblock within the selection
 			let codeblock = document.getText(selection);
 
 			const getOpenAIResponse = async () => {
-				const { data } = await openai.createCompletion({
-					model: "text-davinci-003",
-					prompt: `Explain to me what this function does line by line:
-					
-					${codeblock}`,
-					temperature: 0,
-					max_tokens: 1000,
-				  });
-				
-				console.log(data);
+				const { data } = await openai.createEdit({
+					model: "text-davinci-edit-001",
+					input: codeblock,
+					instruction: 'Add documentation'
+				});
+
+				console.log(`data: ${data}`);
 
 				editor.edit(editBuilder => {
-					
-					const position = new vscode.Position(selection.start.line, 0);
-					console.log(JSON.stringify(position));
-					console.log(data.choices[0].text?.trimStart());
-					console.log(`# ${data.choices[0].text?.trimStart()}\n${codeblock}`);
 					// if the line is negative, it will insert at the start of the document
-					editBuilder.replace(position, `# ${data.choices[0].text?.trimStart()}\n` || "No response from OpenAI");					
+					editBuilder.replace(selection, `${data.choices[0].text}` || "No response from OpenAI");
 				});
 			};
 
 			getOpenAIResponse();
-			
+
 
 		}
 	});
-
 	context.subscriptions.push(disposable);
 }
 

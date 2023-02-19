@@ -12,6 +12,14 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "keybindings": [
+      {
+        "command": "extension.Bs",
+        "key": "alt+shift+b alt+shift+b",
+        "mac": "shift+cmd+b shift+cmd+b",
+        "when": "editorTextFocus"
+      }
+    ],
     "commands": [
       {
         "command": "extension.Bs",
